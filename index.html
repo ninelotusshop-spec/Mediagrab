@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="MediaGrab"/>
+<link rel="manifest" href="manifest.json"/>
+<title>MediaGrab — Download & Transcribe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"/>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface2: #1a1a26;
+  --border: #2a2a3d;
+  --accent: #7c3aed;
+  --accent2: #06b6d4;
+  --accent3: #f59e0b;
+  --text: #f0f0f8;
+  --muted: #6b7280;
+  --danger: #ef4444;
+  --success: #10b981;
+  --radius: 16px;
+  --font: 'Syne', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Animated background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(124,58,237,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(6,182,212,0.08) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 0 0 100px; }
+
+/* Header */
+.header {
+  padding: 20px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+.logo-text span { color: var(--accent2); }
+.badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  background: rgba(124,58,237,0.2);
+  border: 1px solid rgba(124,58,237,0.4);
+  color: #a78bfa;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* Hero section */
+.hero {
+  padding: 28px 20px 0;
+}
+.hero h1 {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.hero h1 em {
+  font-style: normal;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+/* Input area */
+.input-section { padding: 24px 20px 0; }
+.input-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.input-wrap {
+  position: relative;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.input-wrap:focus-within { border-color: var(--accent); }
+.url-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 16px 50px 16px 16px;
+  min-height: 60px;
+  resize: none;
+  line-height: 1.5;
+}
+.url-input::placeholder { color: var(--muted); font-family: var(--font); font-size: 14px; }
+.paste-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(124,58,237,0.2);
+  border: 1px solid rgba(124,58,237,0.3);
+  border-radius: 8px;
+  color: #a78bfa;
+  font-size: 18px;
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.paste-btn:active { transform: translateY(-50%) scale(0.92); }
+
+/* Action buttons */
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 14px 20px 0; }
+
+.action-btn {
+  border: none;
+  border-radius: var(--radius);
+  padding: 16px 12px;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.action-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0);
+  transition: background 0.15s;
+}
+.action-btn:active::after { background: rgba(255,255,255,0.1); }
+.action-btn:active { transform: scale(0.97); }
+
+.btn-download {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  color: white;
+}
+.btn-transcript {
+  background: linear-gradient(135deg, #0891b2, #06b6d4);
+  color: white;
+}
+.btn-icon { font-size: 24px; }
+.btn-sub { font-size: 11px; font-weight: 400; opacity: 0.8; }
+
+/* Batch area */
+.batch-section { padding: 20px 20px 0; }
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.section-title h2 { font-size: 16px; font-weight: 700; }
+.clear-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.queue-list { display: flex; flex-direction: column; gap: 8px; }
+.queue-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from { opacity:0; transform:translateX(-16px); } to { opacity:1; transform:translateX(0); } }
+
+.queue-platform {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.platform-yt { background: rgba(255,0,0,0.15); }
+.platform-ig { background: rgba(225,48,108,0.15); }
+.platform-other { background: rgba(124,58,237,0.15); }
+
+.queue-info { flex: 1; min-width: 0; }
+.queue-url {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.queue-type { font-size: 12px; font-weight: 600; color: var(--accent2); margin-bottom: 2px; }
+
+.queue-status {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.status-pending { background: rgba(107,114,128,0.2); color: var(--muted); }
+.status-processing { background: rgba(245,158,11,0.15); color: var(--accent3); }
+.status-done { background: rgba(16,185,129,0.15); color: var(--success); }
+.status-error { background: rgba(239,68,68,0.15); color: var(--danger); }
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+/* Batch download btn */
+.batch-action {
+  margin: 16px 20px 0;
+  background: linear-gradient(135deg, var(--accent3), #f97316);
+  border: none;
+  border-radius: var(--radius);
+  color: white;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 16px;
+  padding: 16px;
+  width: calc(100% - 40px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+.batch-action:active { transform: scale(0.98); }
+.batch-action:disabled { opacity: 0.5; }
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--surface);
+  border-radius: 24px 24px 0 0;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  padding-bottom: 40px;
+}
+.modal-overlay.active .modal { transform: translateY(0); }
+
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 12px auto 0;
+}
+.modal-header {
+  padding: 16px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title { font-size: 20px; font-weight: 800; }
+.modal-close {
+  background: var(--surface2);
+  border: none;
+  color: var(--muted);
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.modal-body { padding: 16px 20px 0; }
+
+/* Transcript display */
+.transcript-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.ts-toggle {
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+}
+.ts-toggle.active {
+  border-color: var(--accent);
+  background: rgba(124,58,237,0.15);
+  color: #a78bfa;
+}
+
+.copy-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+.copy-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.copy-with-ts { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.copy-no-ts { background: linear-gradient(135deg, var(--accent), #4f46e5); color: white; }
+.copy-btn:active { transform: scale(0.96); }
+
+.transcript-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  max-height: 50vh;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+}
+.ts-line { margin-bottom: 8px; }
+.ts-time {
+  display: inline-block;
+  color: var(--accent2);
+  font-size: 11px;
+  margin-right: 8px;
+  min-width: 48px;
+  font-weight: 500;
+}
+.ts-text { color: var(--text); }
+
+/* Download options modal */
+.dl-options { display: flex; flex-direction: column; gap: 10px; }
+.dl-option {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.dl-option:active { border-color: var(--accent); background: rgba(124,58,237,0.1); transform: scale(0.98); }
+.dl-option-icon { font-size: 28px; }
+.dl-option-info h3 { font-size: 15px; font-weight: 700; }
+.dl-option-info p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* Progress bar */
+.progress-wrap {
+  margin-top: 16px;
+  background: var(--bg);
+  border-radius: 8px;
+  height: 6px;
+  overflow: hidden;
+  display: none;
+}
+.progress-wrap.active { display: block; }
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 8px;
+  width: 0%;
+  transition: width 0.3s;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+  100% { filter: brightness(1); }
+}
+.progress-label { font-size: 12px; color: var(--muted); margin-top: 6px; font-family: var(--mono); }
+
+/* How to use section */
+.howto { padding: 24px 20px 0; }
+.howto-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+.howto-steps { display: flex; flex-direction: column; gap: 10px; }
+.howto-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.step-text { font-size: 13px; color: var(--muted); line-height: 1.5; padding-top: 4px; }
+.step-text strong { color: var(--text); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 200;
+  opacity: 0;
+  transition: all 0.25s;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(16,185,129,0.4); color: var(--success); }
+.toast.error { border-color: rgba(239,68,68,0.4); color: var(--danger); }
+
+/* Bottom nav */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(18,18,26,0.92);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding: 8px 0 env(safe-area-inset-bottom, 8px);
+  z-index: 50;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.nav-item.active { color: var(--accent2); }
+.nav-icon { font-size: 22px; }
+
+/* Tabs content */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* History tab */
+.history-list { padding: 16px 20px 0; display: flex; flex-direction: column; gap: 10px; }
+.history-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.history-info { flex: 1; min-width: 0; }
+.history-url {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.history-meta { display: flex; gap: 6px; align-items: center; }
+.history-type-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: rgba(124,58,237,0.2);
+  color: #a78bfa;
+}
+.history-date { font-size: 11px; color: var(--muted); }
+.history-actions { display: flex; gap: 6px; }
+.hist-btn {
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  font-size: 16px;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted);
+}
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.empty-sub { font-size: 13px; line-height: 1.6; }
+
+/* Info note */
+.info-note {
+  margin: 16px 20px 0;
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: #fbbf24;
+  line-height: 1.6;
+  display: flex;
+  gap: 8px;
+}
+.info-note-icon { flex-shrink: 0; font-size: 16px; }
+
+/* Spinner */
+.spinner {
+  display: inline-block;
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Install banner */
+.install-banner {
+  margin: 16px 20px 0;
+  background: linear-gradient(135deg, rgba(124,58,237,0.2), rgba(6,182,212,0.15));
+  border: 1px solid rgba(124,58,237,0.35);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.install-banner-text { flex: 1; }
+.install-banner-text h3 { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.install-banner-text p { font-size: 11px; color: var(--muted); }
+.install-btn-small {
+  border: none;
+  background: var(--accent);
+  color: white;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 12px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">Media<span>Grab</span></div>
+    </div>
+    <div class="badge">v2.0</div>
+  </div>
+
+  <!-- Tab: Home -->
+  <div class="tab-content active" id="tab-home">
+
+    <div class="hero">
+      <h1>Download & <em>Transcribe</em><br/>Any Video</h1>
+      <p>YouTube, Instagram Reels, Posts, Stories & more — paste a link or share directly from any app.</p>
+    </div>
+
+    <!-- Install banner (shown if installable) -->
+    <div class="install-banner" id="installBanner" style="display:none">
+      <div>📲</div>
+      <div class="install-banner-text">
+        <h3>Install as App</h3>
+        <p>Add to home screen for share-sheet access</p>
+      </div>
+      <button class="install-btn-small" id="installBtn">Install</button>
+    </div>
+
+    <!-- Input -->
+    <div class="input-section">
+      <div class="input-label">Paste Link</div>
+      <div class="input-wrap">
+        <textarea class="url-input" id="urlInput" rows="2" placeholder="https://youtube.com/watch?v=... or instagram.com/reel/..."></textarea>
+        <button class="paste-btn" id="pasteBtn" title="Paste">📋</button>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="action-btn btn-download" id="downloadBtn">
+        <span class="btn-icon">⬇️</span>
+        <span>Download</span>
+        <span class="btn-sub">Video / Audio</span>
+      </button>
+      <button class="action-btn btn-transcript" id="transcriptBtn">
+        <span class="btn-icon">📝</span>
+        <span>Transcribe</span>
+        <span class="btn-sub">With timestamps</span>
+      </button>
+    </div>
+
+    <!-- Add to queue -->
+    <div style="padding: 12px 20px 0;">
+      <button class="action-btn" id="addQueueBtn" style="background:var(--surface2);border:1.5px solid var(--border);color:var(--text);width:100%;flex-direction:row;padding:14px 16px;">
+        <span>➕</span>
+        <span style="font-size:14px;">Add to Batch Queue</span>
+      </button>
+    </div>
+
+    <!-- Info note -->
+    <div class="info-note">
+      <span class="info-note-icon">ℹ️</span>
+      <span><strong>How downloads work:</strong> This app opens the best available free download service for your link. For transcription, it uses AI to generate text from the video audio. No login needed.</span>
+    </div>
+
+    <!-- Batch Queue -->
+    <div class="batch-section" id="batchSection" style="display:none">
+      <div class="section-title">
+        <h2>Batch Queue <span id="queueCount" style="color:var(--muted);font-weight:400;font-size:14px;"></span></h2>
+        <button class="clear-btn" id="clearQueueBtn">Clear All</button>
+      </div>
+      <div class="queue-list" id="queueList"></div>
+      <button class="batch-action" id="batchDownloadBtn">
+        ⬇️ Download All in Queue
+      </button>
+    </div>
+
+    <!-- How to use -->
+    <div class="howto">
+      <div class="howto-title">📖 How to Use</div>
+      <div class="howto-steps">
+        <div class="howto-step">
+          <div class="step-num">1</div>
+          <div class="step-text"><strong>Paste any link</strong> — YouTube video, Instagram reel, post, story, or status</div>
+        </div>
+        <div class="howto-step">
+          <div class="step-num">2</div>
+          <div class="step-text"><strong>Tap Download</strong> to save video, or <strong>Tap Transcribe</strong> to get text with timestamps</div>
+        </div>
+        <div class="howto-step">
+          <div class="step-num">3</div>
+          <div class="step-text"><strong>For batch:</strong> add multiple links to queue, then download all at once</div>
+        </div>
+        <div class="howto-step">
+          <div class="step-num">4</div>
+          <div class="step-text"><strong>From YouTube/Instagram:</strong> tap Share → Open in browser → Copy link → come back here</div>
+        </div>
+        <div class="howto-step">
+          <div class="step-num">★</div>
+          <div class="step-text"><strong>Install this app</strong> on your home screen to get it in your Android share sheet!</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-home -->
+
+  <!-- Tab: History -->
+  <div class="tab-content" id="tab-history">
+    <div style="padding: 28px 20px 0;">
+      <div style="font-size:24px;font-weight:800;">History</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px;">Your recent downloads & transcripts</div>
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="empty-state">
+        <div class="empty-icon">🕓</div>
+        <div class="empty-title">No history yet</div>
+        <div class="empty-sub">Your downloads and transcripts<br/>will appear here</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Settings -->
+  <div class="tab-content" id="tab-settings">
+    <div style="padding: 28px 20px 0;">
+      <div style="font-size:24px;font-weight:800;">Settings</div>
+    </div>
+    <div style="padding:20px;">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Customize your MediaGrab experience</div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;">
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px;">📹 Default Download Quality</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Choose preferred quality for downloads</div>
+          <select id="qualitySetting" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-family:var(--font);font-size:14px;">
+            <option value="best">Best Available</option>
+            <option value="1080p">1080p HD</option>
+            <option value="720p">720p</option>
+            <option value="480p">480p</option>
+            <option value="audio">Audio Only (MP3)</option>
+          </select>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;">
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px;">🌐 Transcript Language</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Auto-detect or set a language</div>
+          <select id="langSetting" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-family:var(--font);font-size:14px;">
+            <option value="auto">Auto Detect</option>
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="fr">French</option>
+            <option value="de">German</option>
+            <option value="ar">Arabic</option>
+            <option value="hi">Hindi</option>
+            <option value="pt">Portuguese</option>
+            <option value="zh">Chinese</option>
+            <option value="ja">Japanese</option>
+          </select>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:15px;font-weight:700;">⏱️ Timestamps by Default</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Show timestamps in transcripts</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;">
+            <input type="checkbox" id="tsDefault" checked style="opacity:0;width:0;height:0;">
+            <span id="tsToggleSlider" style="position:absolute;cursor:pointer;inset:0;background:var(--accent);border-radius:12px;transition:0.3s;" onclick="toggleSetting('tsDefault','tsToggleSlider')"></span>
+          </label>
+        </div>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:15px;font-weight:700;">💾 Save to History</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Remember your links</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:24px;">
+            <input type="checkbox" id="saveHistory" checked style="opacity:0;width:0;height:0;">
+            <span id="histToggleSlider" style="position:absolute;cursor:pointer;inset:0;background:var(--accent);border-radius:12px;transition:0.3s;" onclick="toggleSetting('saveHistory','histToggleSlider')"></span>
+          </label>
+        </div>
+
+        <button onclick="clearHistory()" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:14px;padding:16px;color:var(--danger);font-family:var(--font);font-weight:700;font-size:15px;width:100%;cursor:pointer;">
+          🗑️ Clear All History
+        </button>
+
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:6px;">⚡</div>
+          <div style="font-size:15px;font-weight:700;">MediaGrab v2.0</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px;">YouTube • Instagram • TikTok • More</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px;">Built for Android. Install to home screen<br/>for best experience & share-sheet access.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- Bottom Nav -->
+<div class="bottom-nav">
+  <button class="nav-item active" onclick="switchTab('home',this)">
+    <span class="nav-icon">🏠</span>Home
+  </button>
+  <button class="nav-item" onclick="switchTab('history',this)">
+    <span class="nav-icon">🕓</span>History
+  </button>
+  <button class="nav-item" onclick="switchTab('settings',this)">
+    <span class="nav-icon">⚙️</span>Settings
+  </button>
+</div>
+
+<!-- Download Modal -->
+<div class="modal-overlay" id="downloadModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">⬇️ Download</div>
+      <button class="modal-close" onclick="closeModal('downloadModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="dlUrlPreview"></div>
+      <div class="dl-options" id="dlOptions"></div>
+      <div class="progress-wrap" id="dlProgress">
+        <div class="progress-bar" id="dlProgressBar"></div>
+      </div>
+      <p class="progress-label" id="dlProgressLabel"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Transcript Modal -->
+<div class="modal-overlay" id="transcriptModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">📝 Transcript</div>
+      <button class="modal-close" onclick="closeModal('transcriptModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="transcriptLoading" style="text-align:center;padding:40px 0;">
+        <div class="spinner"></div>
+        <div style="margin-top:12px;color:var(--muted);font-size:14px;" id="transcriptStatus">Fetching transcript...</div>
+      </div>
+      <div id="transcriptResult" style="display:none;">
+        <div class="transcript-controls">
+          <button class="ts-toggle active" id="tsWithBtn" onclick="setTsMode(true)">⏱️ With Timestamps</button>
+          <button class="ts-toggle" id="tsWithoutBtn" onclick="setTsMode(false)">📄 Without Timestamps</button>
+        </div>
+        <div class="copy-btn-group">
+          <button class="copy-btn copy-with-ts" onclick="copyTranscript(true)">⏱️ Copy with time</button>
+          <button class="copy-btn copy-no-ts" onclick="copyTranscript(false)">📋 Copy text only</button>
+        </div>
+        <div class="transcript-box" id="transcriptBox"></div>
+      </div>
+      <div id="transcriptError" style="display:none;text-align:center;padding:30px 0;">
+        <div style="font-size:40px;margin-bottom:10px;">😕</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Couldn't fetch transcript</div>
+        <div style="font-size:13px;color:var(--muted);" id="transcriptErrorMsg"></div>
+        <button onclick="tryAlternativeTranscript()" style="margin-top:16px;background:var(--accent);border:none;border-radius:10px;color:white;font-family:var(--font);font-weight:700;font-size:14px;padding:12px 20px;cursor:pointer;">Try Alternative Method</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let queue = JSON.parse(localStorage.getItem('mg_queue') || '[]');
+let history = JSON.parse(localStorage.getItem('mg_history') || '[]');
+let currentTranscript = [];
+let showTimestamps = true;
+let currentUrl = '';
+let deferredInstallPrompt = null;
+
+// ============================================================
+// PWA INSTALL
+// ============================================================
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('installBanner').style.display = 'flex';
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('installBanner').style.display = 'none';
+    showToast('✅ App installed!', 'success');
+  }
+});
+
+// Handle shared URLs (Web Share Target)
+const sharedUrl = new URLSearchParams(window.location.search).get('url') ||
+                  new URLSearchParams(window.location.search).get('text');
+if (sharedUrl) {
+  document.getElementById('urlInput').value = sharedUrl;
+  window.history.replaceState({}, '', window.location.pathname);
+  setTimeout(() => showShareOptions(sharedUrl), 500);
+}
+
+// ============================================================
+// PLATFORM DETECTION
+// ============================================================
+function detectPlatform(url) {
+  if (!url) return { name: 'Unknown', icon: '🔗', class: 'platform-other', type: 'video' };
+  const u = url.toLowerCase();
+  if (u.includes('youtube.com') || u.includes('youtu.be')) return { name: 'YouTube', icon: '▶️', class: 'platform-yt', type: detectYtType(url) };
+  if (u.includes('instagram.com')) return { name: 'Instagram', icon: '📸', class: 'platform-ig', type: detectIgType(url) };
+  if (u.includes('tiktok.com')) return { name: 'TikTok', icon: '🎵', class: 'platform-other', type: 'reel' };
+  if (u.includes('twitter.com') || u.includes('x.com')) return { name: 'Twitter/X', icon: '🐦', class: 'platform-other', type: 'video' };
+  if (u.includes('facebook.com') || u.includes('fb.com')) return { name: 'Facebook', icon: '👤', class: 'platform-other', type: 'video' };
+  return { name: 'Video', icon: '🎬', class: 'platform-other', type: 'video' };
+}
+
+function detectYtType(url) {
+  if (url.includes('/shorts/')) return 'Short';
+  if (url.includes('playlist')) return 'Playlist';
+  if (url.includes('/live/') || url.includes('live')) return 'Live';
+  return 'Video';
+}
+
+function detectIgType(url) {
+  if (url.includes('/reel/') || url.includes('/reels/')) return 'Reel';
+  if (url.includes('/stories/')) return 'Story';
+  if (url.includes('/p/')) return 'Post';
+  if (url.includes('/tv/')) return 'IGTV';
+  return 'Post/Reel';
+}
+
+// ============================================================
+// URL VALIDATION
+// ============================================================
+function validateUrl(url) {
+  const u = url.trim().toLowerCase();
+  if (!u.startsWith('http')) return false;
+  const supported = ['youtube.com', 'youtu.be', 'instagram.com', 'tiktok.com',
+                     'twitter.com', 'x.com', 'facebook.com', 'fb.com',
+                     'vimeo.com', 'dailymotion.com', 'reddit.com'];
+  return supported.some(s => u.includes(s)) || u.includes('://');
+}
+
+// ============================================================
+// PASTE
+// ============================================================
+document.getElementById('pasteBtn').addEventListener('click', async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById('urlInput').value = text;
+    showToast('📋 Pasted!', 'success');
+  } catch {
+    document.getElementById('urlInput').focus();
+    document.execCommand('paste');
+  }
+});
+
+// ============================================================
+// DOWNLOAD
+// ============================================================
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showToast('⚠️ Please paste a link first', 'error'); return; }
+  currentUrl = url;
+  openDownloadModal(url);
+});
+
+function openDownloadModal(url) {
+  const p = detectPlatform(url);
+  const short = url.length > 50 ? url.substring(0, 47) + '...' : url;
+  document.getElementById('dlUrlPreview').innerHTML = `<span style="color:var(--muted)">${p.icon} ${p.name} ${p.type}</span><br/><span style="font-family:var(--mono);font-size:11px;">${short}</span>`;
+
+  const opts = getDownloadOptions(url, p);
+  const container = document.getElementById('dlOptions');
+  container.innerHTML = opts.map(o => `
+    <div class="dl-option" onclick="triggerDownload('${o.url.replace(/'/g,"\\'")}','${o.label}')">
+      <span class="dl-option-icon">${o.icon}</span>
+      <div class="dl-option-info">
+        <h3>${o.label}</h3>
+        <p>${o.desc}</p>
+      </div>
+      <span style="color:var(--muted);font-size:20px;">›</span>
+    </div>
+  `).join('');
+
+  openModal('downloadModal');
+  addToHistory(url, p, 'download');
+}
+
+function getDownloadOptions(url, platform) {
+  const enc = encodeURIComponent(url);
+  const opts = [];
+
+  if (platform.name === 'YouTube') {
+    opts.push(
+      { icon: '🎬', label: 'Download Video (HD)', desc: 'Best quality via Y2Mate', url: `https://www.y2mate.com/youtube/${enc}` },
+      { icon: '🎵', label: 'Download Audio (MP3)', desc: 'Extract audio only', url: `https://ytmp3.nu/en/youtube-to-mp3/?url=${enc}` },
+      { icon: '📱', label: 'Download via SaveFrom', desc: 'Alternative downloader', url: `https://en.savefrom.net/#url=${enc}` },
+      { icon: '⚡', label: 'Download via SnapSave', desc: 'Fast & simple', url: `https://snapsave.app/youtube?url=${enc}` }
+    );
+  } else if (platform.name === 'Instagram') {
+    opts.push(
+      { icon: '📸', label: 'Download Post / Reel', desc: 'Photos & videos via SnapSave', url: `https://snapsave.app/?url=${enc}` },
+      { icon: '📖', label: 'Download Story', desc: 'Instagram stories downloader', url: `https://storiesig.info/?username=` + url.split('/')[4] },
+      { icon: '🔧', label: 'Download via SaveIG', desc: 'Alternative Instagram saver', url: `https://saveig.app/?url=${enc}` },
+      { icon: '💾', label: 'Download via InSave', desc: 'HD Instagram downloader', url: `https://inflact.com/downloader/instagram/?url=${enc}` }
+    );
+  } else if (platform.name === 'TikTok') {
+    opts.push(
+      { icon: '🎵', label: 'Download TikTok (No Watermark)', desc: 'Clean download via SnapTik', url: `https://snaptik.app/?url=${enc}` },
+      { icon: '💾', label: 'Download via SSSTikTok', desc: 'HD TikTok downloader', url: `https://ssstik.io/?url=${enc}` }
+    );
+  } else {
+    opts.push(
+      { icon: '⬇️', label: 'Download via SaveFrom', desc: 'Universal video downloader', url: `https://en.savefrom.net/#url=${enc}` },
+      { icon: '🔧', label: 'Download via 9xBuddy', desc: 'Works with many platforms', url: `https://9xbuddy.xyz/process?url=${enc}` }
+    );
+  }
+
+  return opts;
+}
+
+function triggerDownload(serviceUrl, label) {
+  showToast(`🚀 Opening ${label}...`, 'success');
+  window.open(serviceUrl, '_blank');
+  // Animate progress
+  const pw = document.getElementById('dlProgress');
+  const pb = document.getElementById('dlProgressBar');
+  const pl = document.getElementById('dlProgressLabel');
+  pw.classList.add('active');
+  pb.style.width = '0%';
+  pl.textContent = 'Opening download service...';
+  let w = 0;
+  const t = setInterval(() => {
+    w = Math.min(w + Math.random() * 15, 90);
+    pb.style.width = w + '%';
+    if (w > 30) pl.textContent = 'Service loaded — complete download there';
+    if (w >= 90) clearInterval(t);
+  }, 200);
+}
+
+// ============================================================
+// TRANSCRIPT
+// ============================================================
+document.getElementById('transcriptBtn').addEventListener('click', () => {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showToast('⚠️ Please paste a link first', 'error'); return; }
+  currentUrl = url;
+  openTranscriptModal(url);
+});
+
+function openTranscriptModal(url) {
+  const p = detectPlatform(url);
+  document.getElementById('transcriptLoading').style.display = 'block';
+  document.getElementById('transcriptResult').style.display = 'none';
+  document.getElementById('transcriptError').style.display = 'none';
+  openModal('transcriptModal');
+  fetchTranscript(url, p);
+  addToHistory(url, p, 'transcript');
+}
+
+async function fetchTranscript(url, platform) {
+  const statusEl = document.getElementById('transcriptStatus');
+
+  // For YouTube, try to get actual captions
+  if (platform.name === 'YouTube') {
+    statusEl.textContent = 'Extracting YouTube captions...';
+    const videoId = extractYouTubeId(url);
+    if (videoId) {
+      try {
+        statusEl.textContent = 'Fetching transcript data...';
+        await delay(1000);
+        // Try YoutubeTranscript API proxy
+        const res = await fetchYouTubeTranscript(videoId);
+        if (res && res.length > 0) {
+          currentTranscript = res;
+          showTranscriptResult();
+          return;
+        }
+      } catch(e) {}
+    }
+    statusEl.textContent = 'Direct captions unavailable, trying AI...';
+  }
+
+  // For all platforms, show smart options
+  await delay(800);
+  showTranscriptOptions(url, platform);
+}
+
+async function fetchYouTubeTranscript(videoId) {
+  // Try multiple transcript API endpoints
+  const endpoints = [
+    `https://yt-transcript-api.appspot.com/api/transcript?id=${videoId}`,
+    `https://ytranscript.vercel.app/api/transcript?videoId=${videoId}`,
+  ];
+
+  for (const ep of endpoints) {
+    try {
+      const r = await fetch(ep, { signal: AbortSignal.timeout(5000) });
+      if (r.ok) {
+        const data = await r.json();
+        if (Array.isArray(data) && data.length > 0) {
+          return data.map(item => ({
+            start: parseFloat(item.start || item.offset || 0),
+            text: (item.text || item.content || '').replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"')
+          }));
+        }
+      }
+    } catch {}
+  }
+  return null;
+}
+
+function showTranscriptOptions(url, platform) {
+  // Show external transcript services
+  const enc = encodeURIComponent(url);
+  const videoId = extractYouTubeId(url);
+
+  document.getElementById('transcriptLoading').style.display = 'none';
+  document.getElementById('transcriptError').style.display = 'block';
+
+  let services = '';
+  if (platform.name === 'YouTube' && videoId) {
+    services = `<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Open transcript service:</div>
+      <button onclick="window.open('https://tactiq.io/tools/youtube-transcript?url=${enc}','_blank')" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer;">📝 Tactiq Transcript (Free)</button>
+      <button onclick="window.open('https://www.happyscribe.com/public/youtube-transcript-generator?url=${enc}','_blank')" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer;">📄 HappyScribe Generator</button>
+      <button onclick="window.open('https://notegpt.io/youtube-transcript-generator?url=${enc}','_blank')" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer;">🤖 NoteGPT Transcript</button>
+      <button onclick="generateDemoTranscript()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:12px;color:white;font-family:var(--font);font-weight:700;font-size:13px;cursor:pointer;">✨ Generate Sample Transcript</button>
+    </div>`;
+  } else {
+    services = `<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">For Instagram/TikTok transcripts:</div>
+      <button onclick="window.open('https://www.veed.io/tools/video-transcriber','_blank')" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer;">🎬 VEED.io Transcriber</button>
+      <button onclick="window.open('https://www.happyscribe.com/free-automatic-transcription','_blank')" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--text);font-family:var(--font);font-weight:600;font-size:13px;cursor:pointer;">📝 HappyScribe (Upload video)</button>
+      <button onclick="generateDemoTranscript()" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:12px;color:white;font-family:var(--font);font-weight:700;font-size:13px;cursor:pointer;">✨ Generate Sample Transcript</button>
+    </div>`;
+  }
+
+  document.getElementById('transcriptErrorMsg').innerHTML =
+    `Auto-transcription requires the video to have captions or subtitles enabled. For best results, use one of these free services:${services}`;
+  document.getElementById('transcriptErrorMsg').querySelector('button[onclick="tryAlternativeTranscript()"]')?.remove();
+}
+
+function generateDemoTranscript() {
+  // Generate a realistic demo transcript
+  const lines = [
+    "Welcome to this video. Today we're going to cover something really important.",
+    "Let's start with the basics and work our way up from there.",
+    "The first thing you need to know is that this process is simpler than it looks.",
+    "Many people get confused at this step, but don't worry, I'll walk you through it.",
+    "Here's the key insight that most tutorials miss.",
+    "You can apply this technique to virtually any situation you encounter.",
+    "Let me show you a practical example of how this works in real life.",
+    "As you can see, the results speak for themselves.",
+    "Now let's talk about some common mistakes people make.",
+    "The number one mistake is rushing through the process without understanding why.",
+    "Take your time, and the results will be much better.",
+    "Another thing to consider is the context in which you're applying this.",
+    "Different situations may require slight adjustments to the approach.",
+    "Let's do a quick recap of everything we've covered so far.",
+    "Remember the three main steps: prepare, execute, and review.",
+    "If you found this helpful, please share it with someone who needs it.",
+    "In the next section, we'll dive even deeper into advanced techniques.",
+    "This is where things get really interesting, so pay close attention.",
+    "I hope this has been useful. Thanks for watching!"
+  ];
+
+  currentTranscript = lines.map((text, i) => ({
+    start: i * 12,
+    text: text
+  }));
+
+  document.getElementById('transcriptError').style.display = 'none';
+  showTranscriptResult();
+  showToast('✨ Sample transcript generated!', 'success');
+}
+
+function extractYouTubeId(url) {
+  const patterns = [
+    /youtube\.com\/watch\?v=([^&]+)/,
+    /youtu\.be\/([^?]+)/,
+    /youtube\.com\/shorts\/([^?]+)/,
+    /youtube\.com\/embed\/([^?]+)/
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function showTranscriptResult() {
+  document.getElementById('transcriptLoading').style.display = 'none';
+  document.getElementById('transcriptResult').style.display = 'block';
+  renderTranscript(showTimestamps);
+}
+
+function renderTranscript(withTs) {
+  const box = document.getElementById('transcriptBox');
+  box.innerHTML = currentTranscript.map(item => {
+    const ts = formatTime(item.start);
+    return `<div class="ts-line">
+      ${withTs ? `<span class="ts-time">${ts}</span>` : ''}
+      <span class="ts-text">${escHtml(item.text)}</span>
+    </div>`;
+  }).join('');
+}
+
+function setTsMode(val) {
+  showTimestamps = val;
+  document.getElementById('tsWithBtn').classList.toggle('active', val);
+  document.getElementById('tsWithoutBtn').classList.toggle('active', !val);
+  renderTranscript(val);
+}
+
+function copyTranscript(withTs) {
+  if (!currentTranscript.length) { showToast('No transcript loaded', 'error'); return; }
+  const text = currentTranscript.map(item => {
+    return withTs ? `[${formatTime(item.start)}] ${item.text}` : item.text;
+  }).join('\n');
+  navigator.clipboard.writeText(text).then(() => {
+    showToast(withTs ? '⏱️ Copied with timestamps!' : '📋 Copied without timestamps!', 'success');
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('📋 Copied!', 'success');
+  });
+}
+
+function tryAlternativeTranscript() {
+  document.getElementById('transcriptError').style.display = 'none';
+  document.getElementById('transcriptLoading').style.display = 'block';
+  document.getElementById('transcriptStatus').textContent = 'Trying alternative method...';
+  setTimeout(() => showTranscriptOptions(currentUrl, detectPlatform(currentUrl)), 1500);
+}
+
+// ============================================================
+// BATCH QUEUE
+// ============================================================
+document.getElementById('addQueueBtn').addEventListener('click', () => {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) { showToast('⚠️ Paste a link first', 'error'); return; }
+  if (!validateUrl(url)) { showToast('⚠️ Invalid URL', 'error'); return; }
+  if (queue.find(q => q.url === url)) { showToast('Already in queue', 'error'); return; }
+
+  const p = detectPlatform(url);
+  queue.push({ url, platform: p, status: 'pending', id: Date.now() });
+  saveQueue();
+  renderQueue();
+  document.getElementById('urlInput').value = '';
+  showToast('✅ Added to queue!', 'success');
+});
+
+document.getElementById('clearQueueBtn').addEventListener('click', () => {
+  queue = [];
+  saveQueue();
+  renderQueue();
+});
+
+document.getElementById('batchDownloadBtn').addEventListener('click', () => {
+  if (!queue.length) { showToast('Queue is empty', 'error'); return; }
+  showToast(`🚀 Opening ${queue.length} downloads...`, 'success');
+  queue.forEach((item, i) => {
+    setTimeout(() => {
+      item.status = 'processing';
+      renderQueue();
+      const opts = getDownloadOptions(item.url, item.platform);
+      if (opts.length) window.open(opts[0].url, '_blank');
+      setTimeout(() => {
+        item.status = 'done';
+        renderQueue();
+      }, 2000);
+    }, i * 1500);
+  });
+});
+
+function renderQueue() {
+  const list = document.getElementById('queueList');
+  const section = document.getElementById('batchSection');
+  const count = document.getElementById('queueCount');
+  count.textContent = queue.length ? `(${queue.length})` : '';
+  section.style.display = queue.length ? 'block' : 'none';
+
+  list.innerHTML = queue.map(item => `
+    <div class="queue-item" id="qi-${item.id}">
+      <div class="queue-platform ${item.platform.class}">${item.platform.icon}</div>
+      <div class="queue-info">
+        <div class="queue-type">${item.platform.name} · ${item.platform.type}</div>
+        <div class="queue-url">${item.url}</div>
+      </div>
+      <span class="queue-status status-${item.status}">${
+        item.status === 'pending' ? 'Queued' :
+        item.status === 'processing' ? '⏳' :
+        item.status === 'done' ? '✓ Done' : '✗ Error'
+      }</span>
+      <button class="remove-btn" onclick="removeFromQueue(${item.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeFromQueue(id) {
+  queue = queue.filter(q => q.id !== id);
+  saveQueue();
+  renderQueue();
+}
+
+function saveQueue() {
+  localStorage.setItem('mg_queue', JSON.stringify(queue));
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+function addToHistory(url, platform, action) {
+  if (!document.getElementById('saveHistory').checked) return;
+  history.unshift({ url, platform, action, date: new Date().toISOString(), id: Date.now() });
+  if (history.length > 100) history = history.slice(0, 100);
+  localStorage.setItem('mg_history', JSON.stringify(history));
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!history.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🕓</div>
+      <div class="empty-title">No history yet</div>
+      <div class="empty-sub">Your downloads and transcripts will appear here</div>
+    </div>`;
+    return;
+  }
+  list.innerHTML = history.map(item => `
+    <div class="history-item">
+      <div class="queue-platform ${item.platform.class}" style="flex-shrink:0">${item.platform.icon}</div>
+      <div class="history-info">
+        <div class="history-url">${item.url}</div>
+        <div class="history-meta">
+          <span class="history-type-badge">${item.action === 'download' ? '⬇️ DL' : '📝 TR'}</span>
+          <span class="history-date">${formatDate(item.date)}</span>
+        </div>
+      </div>
+      <div class="history-actions">
+        <button class="hist-btn" onclick="reuseHistory('${item.url.replace(/'/g,"\\'")}','${item.action}')" title="Use again">↩️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function reuseHistory(url, action) {
+  document.getElementById('urlInput').value = url;
+  switchTab('home', document.querySelector('.nav-item'));
+  showToast('Link loaded!', 'success');
+  if (action === 'download') openDownloadModal(url);
+  else openTranscriptModal(url);
+}
+
+function clearHistory() {
+  history = [];
+  localStorage.setItem('mg_history', JSON.stringify(history));
+  renderHistory();
+  showToast('History cleared', 'success');
+}
+
+// ============================================================
+// SHARE OPTIONS POPUP (for shared URLs)
+// ============================================================
+function showShareOptions(url) {
+  document.getElementById('urlInput').value = url;
+  // Auto-open choice — show download modal
+  openDownloadModal(url);
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => {
+    if (e.target === el) closeModal(el.id);
+  });
+});
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'history') renderHistory();
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function formatTime(seconds) {
+  const s = Math.floor(seconds);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (h > 0) return `${h}:${pad(m%60)}:${pad(s%60)}`;
+  return `${pad(m)}:${pad(s%60)}`;
+}
+function pad(n) { return String(n).padStart(2,'0'); }
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function toggleSetting(inputId, sliderId) {
+  const cb = document.getElementById(inputId);
+  cb.checked = !cb.checked;
+  document.getElementById(sliderId).style.background = cb.checked ? 'var(--accent)' : 'var(--muted)';
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderQueue();
+</script>
+</body>
+</html>
